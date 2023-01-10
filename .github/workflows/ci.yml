@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    types: [ opened, reopened, synchronize ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scalaV: [ "2.13.8", "3.2.1" ]
+    env:
+      GH_READ_PACKAGES: ${{ secrets.GH_READ_PACKAGES }}
+    steps:
+      - run: env
+      - uses: actions/checkout@v3.3.0
+      - uses: coursier/cache-action@v6.4.2
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: '22.3.0'
+          java-version: '17'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run tests
+        run: sbt '++ ${{ matrix.scalaV }} clean;test'
